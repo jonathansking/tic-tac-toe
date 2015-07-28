@@ -90,17 +90,17 @@ class AI
 
   def decideMove
     @board_copy = @board.clone
-    minimax(board_copy, "computer", 0)
+    minimax("computer", 0)
   end
 
   def minimax(player, depth)
-    return board_copy.evaluate(player), nil if board_copy.is_game_over
+    return @board_copy.evaluate(player), nil if @board_copy.is_game_over
 
     best_move = nil
     best_score = computer? ? -Float::INFINITY : Float::INFINITY
 
-    board.moves.each do |move|
-      board_copy.make_move(move, x_or_o)
+    @board_copy.moves.each do |move|
+      @board_copy.make_move(move, x_or_o)
       score = minimax(player, depth + 1)
       if computer? && score > best_score  # max
         best_score = score
