@@ -4,7 +4,7 @@ class Game
 
   def initialize
     @board = Board.new
-    @ai = AI.new
+    @ai = AI.new(board)
     player = ["X", "O"].sample
     player == "X" ? @current_player = "human" : @current_player = "computer"
     other_player = human? ? "computer" : "human"
@@ -20,7 +20,7 @@ class Game
   end
 
   def start_game
-    until is_game_over?
+    until @board.is_game_over?
       next_turn
     end
   end
@@ -28,8 +28,8 @@ class Game
   def next_turn
     display_player_turn
     @board.draw_board
-    move = human? ? get_player_choice : @ai.minimax
-    @board.update_board(move, x_or_o[@current_player])
+    move = human? ? get_player_choice : @ai.decide_move
+    @board.make_move(move, x_or_o[@current_player])
     switch_player
   end
 
@@ -41,7 +41,6 @@ class Game
     puts "Choose where to place an #{x_or_o[@current_player]} (1 - 9):"
     choice = gets.chomp.to_i
     choice = get_player_choice unless choice.between?(1, 9)
-    puts choice
     return choice
   end
 
@@ -51,10 +50,6 @@ class Game
 
   def human?
     @current_player == "human"
-  end
-
-  def is_game_over?
-    false
   end
 
   def game_over
@@ -79,13 +74,50 @@ class Board
     end
   end
 
-  def update_board(move, x_or_o)
+  def make_move(move, x_or_o)
     @moves[move] = x_or_o
+  end
+
+  def is_game_over?
+    false
   end
 end
 
 class AI
-  def minimax
+  def initialize(board)
+    @board = board
+  end
+
+  def decideMove
+    @board_copy = @board.clone
+    minimax(board_copy, "computer", 0)
+  end
+
+  def minimax(player, depth)
+    return board_copy.evaluate(player), nil if board_copy.is_game_over
+
+    best_move = nil
+    best_score = computer? ? -Float::INFINITY : Float::INFINITY
+
+    board.moves.each do |move|
+      board_copy.make_move(move, x_or_o)
+      score = minimax(player, depth + 1)
+      if computer? && score > best_score  # max
+        best_score = score
+        best_move = move
+      else
+        if score < best_score             # min
+          best_score = score
+          best_move = move
+        end
+      end
+
+      return best_score, best_move
+    end
+  end
+
+  def computer?
+    player == "computer"
   end
 end
 
