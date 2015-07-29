@@ -4,11 +4,11 @@ class Game
 
   def initialize
     @board = Board.new
-    @ai = AI.new(board)
     player = ["X", "O"].sample
     player == "X" ? @current_player = "human" : @current_player = "computer"
     other_player = human? ? "computer" : "human"
     @x_or_o = {@current_player => "X", other_player => "O"}
+    @ai = AI.new(board, x_or_o)
     before_game
   end
 
@@ -23,6 +23,7 @@ class Game
     until @board.is_game_over?
       next_turn
     end
+    game_over
   end
 
   def next_turn
@@ -53,9 +54,10 @@ class Game
   end
 
   def game_over
+    @board.draw_board
     puts "-----------------------"
-    puts "Game Over"
-    puts "-----------------------"
+    puts human? ? "You lost!" : "You win!"  # backwards because players
+    puts "-----------------------"          # are switched
     puts "Press Enter to start a new game"
   end
 end
@@ -69,7 +71,7 @@ class Board
 
   def draw_board
     (1..9).each_slice(3) do |x, y, z|
-      puts "\t #{moves[x]} | #{moves[y]} | #{moves[z]} "
+      puts "\t #{@moves[x]} | #{@moves[y]} | #{@moves[z]} "
       puts "\t---+---+---" if x < 7
     end
   end
@@ -78,31 +80,45 @@ class Board
     @moves[move] = x_or_o
   end
 
+  def evaluate(player)
+  end
+
   def is_game_over?
-    false
+    wins = [
+          [1, 2, 3], [4, 5, 6], [7, 8, 9],  # Horizontal wins
+          [1, 4, 7], [2, 5, 8], [3, 6, 9],  # Vertical wins
+          [1, 5, 9], [3, 5, 7]              # Diagonal wins
+    ]
+    x_keys = moves.select { |k, v| v == "X" }.keys
+    o_keys = moves.select { |k, v| v == "O" }.keys
+    wins.any? { |w| (w - x_keys).empty? } || wins.any? { |w| (w - o_keys).empty? }
   end
 end
 
 class AI
-  def initialize(board)
+  attr_reader :x_or_o
+
+  def initialize(board, x_or_o)
     @board = board
+    @x_or_o = x_or_o
   end
 
-  def decideMove
+  def decide_move
     @board_copy = @board.clone
     minimax("computer", 0)
   end
 
   def minimax(player, depth)
-    return @board_copy.evaluate(player), nil if @board_copy.is_game_over
+=begin
+    return @board_copy.evaluate(player), nil if @board_copy.is_game_over?
 
     best_move = nil
-    best_score = computer? ? -Float::INFINITY : Float::INFINITY
+    best_score = computer?(player) ? -Float::INFINITY : Float::INFINITY
 
-    @board_copy.moves.each do |move|
-      @board_copy.make_move(move, x_or_o)
+    @board_copy.moves.each do |key, value|
+      @board_copy.make_move(move, @x_or_o[player])
       score = minimax(player, depth + 1)
-      if computer? && score > best_score  # max
+      if computer?(player) && score > best_score  # max
         best_score = score
         best_move = move
       else
@@ -114,9 +130,11 @@ class AI
 
       return best_score, best_move
     end
+=end
+    return [4, 5, 6, 7, 8, 9].sample
   end
 
-  def computer?
+  def computer?(player)
     player == "computer"
   end
 end
