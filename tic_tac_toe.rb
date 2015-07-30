@@ -89,6 +89,7 @@ class Board
   end
 
   def evaluate(player)
+    -1
   end
 
   def is_game_over?
@@ -121,34 +122,33 @@ class AI
   end
 
   def decide_move
-    @board_copy = @board.clone
-    minimax("computer", 0)
+    new_board = @board.clone
+    minimax(new_board, "computer")
   end
 
-  def minimax(player, depth)
-=begin
-    return @board_copy.evaluate(player), nil if @board_copy.is_game_over?
+  def minimax(board, player)
+    return board.evaluate(player) if board.is_game_over?
 
     best_move = nil
     best_score = computer?(player) ? -Float::INFINITY : Float::INFINITY
+    open_moves = get_open_moves(board)
 
-    @board_copy.moves.each do |key, value|
-      @board_copy.make_move(move, @x_or_o[player])
-      score = minimax(player, depth + 1)
-      if computer?(player) && score > best_score  # max
-        best_score = score
-        best_move = move
+    open_moves.each do |move|
+      new_board = board.clone
+      new_board.make_move(move, @x_or_o[player])
+      score = minimax(new_board, player)
+      if computer?(player)
+        best_score, best_move = score, move if score > best_score   # max
       else
-        if score < best_score             # min
-          best_score = score
-          best_move = move
-        end
+        best_score, best_move = score, move if score < best_score   # min
       end
-
-      return best_score, best_move
     end
-=end
-    return [1, 2, 3, 4, 5, 6, 7, 8, 9].sample
+
+    return best_score
+  end
+
+  def get_open_moves(board)
+    (1..9).reject { |i| board.moves.include?(i) }
   end
 
   def computer?(player)
