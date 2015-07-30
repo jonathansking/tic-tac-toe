@@ -56,9 +56,17 @@ class Game
   def game_over
     @board.draw_board
     puts "-----------------------"
-    puts human? ? "You lost!" : "You win!"  # backwards because players
-    puts "-----------------------"          # are switched
+    puts @board.tie_game? ? tie_screen : win_lose_screen
+    puts "-----------------------"
     puts "Press Enter to start a new game"
+  end
+
+  def tie_screen
+    "Tie game!"
+  end
+
+  def win_lose_screen
+    human? ? "You lost!" : "You win!"       # backwards because switch players
   end
 end
 
@@ -84,14 +92,23 @@ class Board
   end
 
   def is_game_over?
-    wins = [
+    @wins = [
           [1, 2, 3], [4, 5, 6], [7, 8, 9],  # Horizontal wins
           [1, 4, 7], [2, 5, 8], [3, 6, 9],  # Vertical wins
           [1, 5, 9], [3, 5, 7]              # Diagonal wins
     ]
-    x_keys = moves.select { |k, v| v == "X" }.keys
-    o_keys = moves.select { |k, v| v == "O" }.keys
-    wins.any? { |w| (w - x_keys).empty? } || wins.any? { |w| (w - o_keys).empty? }
+    win_or_lose? || tie_game?
+  end
+
+  def win_or_lose?()
+    x_keys = @moves.select { |k, v| v == "X" }.keys
+    o_keys = @moves.select { |k, v| v == "O" }.keys
+    @wins.any? { |w| (w - x_keys).empty? } ||
+    @wins.any? { |w| (w - o_keys).empty? }
+  end
+
+  def tie_game?
+    @moves.length == 9 unless win_or_lose?
   end
 end
 
@@ -131,7 +148,7 @@ class AI
       return best_score, best_move
     end
 =end
-    return [4, 5, 6, 7, 8, 9].sample
+    return [1, 2, 3, 4, 5, 6, 7, 8, 9].sample
   end
 
   def computer?(player)
