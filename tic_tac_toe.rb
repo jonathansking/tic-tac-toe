@@ -75,6 +75,11 @@ class Board
 
   def initialize
     @moves = Hash.new("-")
+    @wins = [
+          [1, 2, 3], [4, 5, 6], [7, 8, 9],  # Horizontal wins
+          [1, 4, 7], [2, 5, 8], [3, 6, 9],  # Vertical wins
+          [1, 5, 9], [3, 5, 7]              # Diagonal wins
+    ]
   end
 
   def draw_board
@@ -88,23 +93,33 @@ class Board
     @moves[move] = x_or_o
   end
 
-  def evaluate(player)
-    -1
+  def evaluate(player_x_or_o)
+    return 0 if tie_game?
+
+    if player_x_or_o == "X"
+      return 1 if x_win?
+      return -1
+    else
+      return 1 if o_win?
+      return -1
+    end
   end
 
   def is_game_over?
-    @wins = [
-          [1, 2, 3], [4, 5, 6], [7, 8, 9],  # Horizontal wins
-          [1, 4, 7], [2, 5, 8], [3, 6, 9],  # Vertical wins
-          [1, 5, 9], [3, 5, 7]              # Diagonal wins
-    ]
     win_or_lose? || tie_game?
   end
 
-  def win_or_lose?()
+  def win_or_lose?
+    x_win? || o_win?
+  end
+
+  def x_win?
     x_keys = @moves.select { |k, v| v == "X" }.keys
+    @wins.any? { |w| (w - x_keys).empty? }
+  end
+
+  def o_win?
     o_keys = @moves.select { |k, v| v == "O" }.keys
-    @wins.any? { |w| (w - x_keys).empty? } ||
     @wins.any? { |w| (w - o_keys).empty? }
   end
 
@@ -122,29 +137,41 @@ class AI
   end
 
   def decide_move
-    new_board = @board.clone
-    minimax(new_board, "computer")
+    new_board = Marshal.load(Marshal.dump(@board))
+    best_score, best_move = minimax(new_board, "computer")
+    return best_move
   end
 
   def minimax(board, player)
-    return board.evaluate(player) if board.is_game_over?
-
-    best_move = nil
-    best_score = computer?(player) ? -Float::INFINITY : Float::INFINITY
-    open_moves = get_open_moves(board)
-
-    open_moves.each do |move|
-      new_board = board.clone
-      new_board.make_move(move, @x_or_o[player])
-      score = minimax(new_board, player)
-      if computer?(player)
-        best_score, best_move = score, move if score > best_score   # max
-      else
-        best_score, best_move = score, move if score < best_score   # min
-      end
+    if board.is_game_over?
+      #puts "game is over"
+      return board.evaluate(@x_or_o[player])
     end
 
-    return best_score
+    best_move = 0
+    best_score = computer?(player) ? -100 : 100
+    open_moves = get_open_moves(board)
+    open_moves.each do |move|
+      #puts move
+      new_board = Marshal.load(Marshal.dump(board))
+      new_board.make_move(move, @x_or_o[player])
+      #puts @board.moves.inspect
+      score, junk = minimax(new_board, next_player(player))
+      if computer?(player)
+        #best_score, best_move = 1, 2
+        best_score, best_move = score, move if score > best_score   # max
+      else
+        #best_score, best_move = 1, 2
+        best_score, best_move = score, move if score < best_score   # min
+      end
+      #puts new_board.moves.inspect
+    end
+
+    return best_score, best_move
+  end
+
+  def next_player(player)
+    computer?(player) ? "human" : "computer"
   end
 
   def get_open_moves(board)
