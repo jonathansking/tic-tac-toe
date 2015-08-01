@@ -93,15 +93,29 @@ class Board
     @moves[move] = x_or_o
   end
 
-  def evaluate(player_x_or_o)
-    return 0 if tie_game?
+  def evaluate(ai_x_or_o)
+    #puts @moves.sort.to_h.inspect
+    if tie_game?
+      #puts "tie"
+      return 0
+    end
 
-    if player_x_or_o == "X"
-      return 1 if x_win?
-      return -1
+    if ai_x_or_o == "X"
+      if x_win?
+        #puts "x_win"
+        return 1
+      else
+        #puts "x_loss"
+        return -1
+      end
     else
-      return 1 if o_win?
-      return -1
+      if o_win?
+        #puts "o_win"
+        return 1
+      else
+        #puts "o_loss"
+        return -1
+      end
     end
   end
 
@@ -144,27 +158,22 @@ class AI
 
   def minimax(board, player)
     if board.is_game_over?
-      #puts "game is over"
-      return board.evaluate(@x_or_o[player])
+      #puts player
+      return board.evaluate(@x_or_o["computer"]), 0
     end
 
     best_move = 0
     best_score = computer?(player) ? -100 : 100
     open_moves = get_open_moves(board)
     open_moves.each do |move|
-      #puts move
       new_board = Marshal.load(Marshal.dump(board))
       new_board.make_move(move, @x_or_o[player])
-      #puts @board.moves.inspect
-      score, junk = minimax(new_board, next_player(player))
+      score = minimax(new_board, next_player(player)).first
       if computer?(player)
-        #best_score, best_move = 1, 2
         best_score, best_move = score, move if score > best_score   # max
       else
-        #best_score, best_move = 1, 2
         best_score, best_move = score, move if score < best_score   # min
       end
-      #puts new_board.moves.inspect
     end
 
     return best_score, best_move
