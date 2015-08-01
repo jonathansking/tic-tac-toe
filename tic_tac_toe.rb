@@ -58,7 +58,6 @@ class Game
     puts "-----------------------"
     puts @board.tie_game? ? tie_screen : win_lose_screen
     puts "-----------------------"
-    puts "Press Enter to start a new game"
   end
 
   def tie_screen
@@ -94,26 +93,20 @@ class Board
   end
 
   def evaluate(ai_x_or_o)
-    #puts @moves.sort.to_h.inspect
     if tie_game?
-      #puts "tie"
       return 0
     end
 
     if ai_x_or_o == "X"
       if x_win?
-        #puts "x_win"
         return 1
       else
-        #puts "x_loss"
         return -1
       end
     else
       if o_win?
-        #puts "o_win"
         return 1
       else
-        #puts "o_loss"
         return -1
       end
     end
@@ -158,7 +151,6 @@ class AI
 
   def minimax(board, player)
     if board.is_game_over?
-      #puts player
       return board.evaluate(@x_or_o["computer"]), 0
     end
 
